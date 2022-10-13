@@ -54,27 +54,46 @@ async function draw() {
       .range([dimensions.ctrHeight, 0])
       .nice()
 
+    const exitTransition = d3.transition().duration(500)
+    const updateTransition = exitTransition.transition().duration(500)
+
     // Draw Bars
     ctr.selectAll('rect')
       .data(newDataset)
-      .join('rect')
+      .join(
+        (enter) => enter.append('rect')
+          .attr('width', d => d3.max([0, xScale(d.x1) - xScale(d.x0) - padding]))
+          .attr('height', 0)
+          .attr('x', d => xScale(d.x0))
+          .attr('y', dimensions.ctrHeight)
+          .attr('fill', '#01c5c4'),
+        (update) => update,
+        (exit) => exit.transition(exitTransition)
+          .attr('y', dimensions.ctrHeight)
+          .attr('height', 0)
+          .remove()
+
+      )
+      .transition(updateTransition)
       .attr('width', d => d3.max([0, xScale(d.x1) - xScale(d.x0) - padding]))
       .attr('height', d => dimensions.ctrHeight - yScale(yAccessor(d)))
       .attr('x', d => xScale(d.x0))
       .attr('y', d => yScale(yAccessor(d)))
       .attr('fill', '#01c5c4')
 
-      labelsGroup.selectAll('text')
+    labelsGroup.selectAll('text')
       .data(newDataset)
       .join('text')
+      .transition()
       .attr('x', d => xScale(d.x0) + (xScale(d.x1) - xScale(d.x0)) / 2)
       .attr('y', d => yScale(yAccessor(d)) - 10)
       .text(yAccessor)
 
-      // draw axis
-      const xAxis = d3.axisBottom(xScale)
+    // draw axis
+    const xAxis = d3.axisBottom(xScale)
 
-      xAxisGroup.call(xAxis)
+    xAxisGroup.transition()
+      .call(xAxis)
   }
 
   d3.select("#metric").on('change', function(e) {
