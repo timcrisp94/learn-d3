@@ -55,22 +55,6 @@ async function draw() {
     .attr('r', 5)
     .attr('fill', 'red')
     .attr('data-temp', yAccessor)
-    .on('mouseenter', function (event, datum) {
-      d3.select(this)
-        .attr('fill', '#120078')
-        .attr('r', 8)
-      
-      tooltip.style('display', 'block')
-        .style('top', yScale(yAccessor(datum)) - 25 + 'px')
-        .style('left', xScale(xAccessor(datum)) + 'px')
-    })
-    .on('mouseleave', function (event) {
-      d3.select(this)
-        .attr('fill', 'red')
-        .attr('r', 5)
-
-      tooltip.style('display', 'none')
-    }) 
 
   // Axes
   const xAxis = d3.axisBottom(xScale)
@@ -103,7 +87,53 @@ async function draw() {
     .style('transform', 'rotate(270deg)')
     .style('text-anchor', 'middle')
 
-    
+  const delaunay = d3.Delaunay.from(
+    dataset,
+    (d) => xScale(xAccessor(d)),
+    (d) => yScale(yAccessor(d)),
+    )  
+  
+  const voronoi = delaunay.voronoi()
+  voronoi.xmax = dimensions.ctrWidth
+  voronoi.ymax = dimensions.ctrHeight
+  
+  ctr.append('g')
+    .selectAll('path')
+    .data(dataset)
+    .join('path')
+    // .attr('stroke', 'black')
+    .attr('fill', 'transparent')
+    .attr('d', (d, i) => voronoi.renderCell(i))
+    .on('mouseenter', function (event, datum) {
+      ctr.append('circle')
+        .classed('dot-hovered', true)
+        .attr('fill', '#120078')
+        .attr('r', 8)
+        .attr('cx', d => xScale(xAccessor(datum)))    
+        .attr('cy', d => yScale(yAccessor(datum)))
+        .style('pointer-event', 'none')
+      
+      tooltip.style('display', 'block')
+        .style('top', yScale(yAccessor(datum)) - 25 + 'px')
+        .style('left', xScale(xAccessor(datum)) + 'px')
+
+      const formatter = d3.format('.2f')
+      const dateFormatter = d3.timeFormat('%B %-d, %Y')
+
+      tooltip.select('.metric-humidity span')
+        .text(formatter(xAccessor(datum)))
+
+      tooltip.select('.metric-humidity span')
+        .text(formatter(yAccessor(datum)))
+
+      tooltip.select('.metric-date')
+        .text(dateFormatter(datum.currently.time * 1000))
+    })
+    .on('mouseleave', function (event) {
+      ctr.select('.dot-hovered').remove()
+
+      tooltip.style('display', 'none')
+    }) 
 }
 
 draw()
