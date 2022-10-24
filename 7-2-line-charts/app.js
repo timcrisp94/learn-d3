@@ -34,11 +34,35 @@ async function draw() {
     .range([dimensions.ctrHeight, 0])
     .nice()
 
-  const xScale = d3.scaleTime()
+  const xScale = d3.scaleUtc()
     .domain(d3.extent(dataset, xAccessor))
     .range([0, dimensions.ctrWidth])
 
-  console.log(xScale(xAccessor(dataset[0])), dataset[0])
+  const lineGenerator = d3.line()
+    .x((d) => xScale(xAccessor(d)))
+    .y((d) => yScale(yAccessor(d)))
+
+  // console.log(lineGenerator(dataset))
+
+  ctr.append('path')
+    .datum(dataset)
+    .attr('d', lineGenerator)
+    .attr('fill', 'none')
+    .attr('stroke', '#30475e')
+    .attr('stroke-width', 2)
+  
+  // Axis
+  const yAxis = d3.axisLeft(yScale)
+    .tickFormat((d) => `${d}`)
+
+  ctr.append('g')
+    .call(yAxis)
+
+  const xAxis = d3.axisBottom(xScale)
+
+  ctr.append('g')
+    .style('transform', `translateY(${dimensions.ctrHeight}px)`)
+    .call(xAxis)
 }
 
 draw()
