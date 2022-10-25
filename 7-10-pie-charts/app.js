@@ -28,12 +28,16 @@ async function draw() {
   // Scales
   const populationPie = d3.pie()
     .value((d) => d.value)
-
+    .sort(null)
   const slices = populationPie(dataset)
   
   const arc = d3.arc()
     .outerRadius(radius)
     .innerRadius(0)
+  
+  const arcLabels = d3.arc()
+    .outerRadius(radius)
+    .innerRadius(200)
 
   const colors = d3.quantize((t) => d3.interpolateSpectral(t), dataset.length)
   const colorScale = d3.scaleOrdinal()
@@ -52,6 +56,31 @@ async function draw() {
       .join('path')
       .attr('d', arc)
       .attr('fill', d => colorScale(d.data.name))
+
+    const labelsGroup = ctr.append('g')
+      .attr(
+        'transform', 
+        `translate(${dimensions.ctrHeight / 2}, ${dimensions.ctrWidth / 2})`
+      )
+      .classed('labels', true)
+
+    labelsGroup.selectAll('text')
+      .data(slices)
+      .join('text')
+      .attr('transform', d => `translate(${arcLabels.centroid(d)})`)
+      .call(
+        text => text.append('tspan')
+          .style('font-weight', 'bold')
+          .attr('y', -4)
+          .text(d => d.data.name)
+      )
+      .call(
+        text => text.filter((d) => (d.endAngle - d.startAngle) > 0.25)
+        .append('tspan')
+        .attr('y', 9)
+        .attr('x', 0)
+        .text(d => d.data.value)
+      )
 }
 
 draw()
