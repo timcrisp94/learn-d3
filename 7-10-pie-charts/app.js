@@ -35,6 +35,11 @@ async function draw() {
     .outerRadius(radius)
     .innerRadius(0)
 
+  const colors = d3.quantize((t) => d3.interpolateSpectral(t), dataset.length)
+  const colorScale = d3.scaleOrdinal()
+    .domain(dataset.map((element => element.name)))
+    .range(colors)
+
   // Draw Shape
   const arcGroup = ctr.append('g')
     .attr(
@@ -46,6 +51,7 @@ async function draw() {
       .data(slices)
       .join('path')
       .attr('d', arc)
+      .attr('fill', d => colorScale(d.data.name))
 }
 
 draw()
