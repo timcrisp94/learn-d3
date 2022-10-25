@@ -49,12 +49,18 @@ async function draw() {
     .domain(dataset.map(state => state.name))
     .range([dimensions.margins, dimensions.ctrWidth])
 
+  const colorScale = d3.scaleOrdinal()
+    .domain(stackData.map(d => d.key))
+    .range(d3.schemeSpectral[stackData.length])
+    .unknown('#ccc')
+
   // Draw Bars
   const ageGroups = ctr.append('g')
     .classed('age-groups', true)
     .selectAll('g')
     .data(stackData)
     .join('g')
+    .attr('fill', d => colorScale(d.key))
 
   ageGroups.selectAll('rect')
     .data(d => d)
